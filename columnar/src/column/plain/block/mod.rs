@@ -148,20 +148,16 @@ impl PlainBlock {
     /// Appends the bytes of the value at position `slot` in the block to `output`.
     ///
     /// Output is NOT cleared beforehand.
-    ///
-    /// `codes_buffer` is scratch space to contain the token codes.
-    pub fn append_value(&self, slot: u32, codes_buffer: &mut Vec<u16>, output: &mut Vec<u8>) {
+    pub fn append_value(&self, slot: u32, output: &mut Vec<u8>) {
         match self {
-            PlainBlock::OnPair16(onpair16_block) => {
-                onpair16_block.append_value(slot, codes_buffer, output)
-            }
+            PlainBlock::OnPair16(onpair16_block) => onpair16_block.append_value(slot, output),
             PlainBlock::Raw(raw_block) => raw_block.append_value(slot, output),
         }
     }
 
     // TODO add a batched version
-    // pub(crate) fn append_value_batch(&self, slots: &[u32], codes_buffer: &mut Vec<u16>,
-    // concatenated_output: &mut Vec<u8>, ouput_lens: &[u32]);
+    // pub(crate) fn append_value_batch(&self, slots: &[u32], concatenated_output: &mut Vec<u8>,
+    // ouput_lens: &[u32]);
 }
 
 #[cfg(test)]
@@ -205,11 +201,10 @@ mod tests {
 
     fn decode_all(block_bytes: Vec<u8>, num_values: usize) -> Vec<Vec<u8>> {
         let block = PlainBlock::open(OwnedBytes::new(block_bytes), num_values as u32);
-        let mut codes_buffer = Vec::new();
         (0..num_values as u32)
             .map(|slot| {
                 let mut value = Vec::new();
-                block.append_value(slot, &mut codes_buffer, &mut value);
+                block.append_value(slot, &mut value);
                 value
             })
             .collect()
